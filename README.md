@@ -1,78 +1,80 @@
 # 🌽🛡️ Mais Tower Defense
 
-**Ein Web-Tower-Defense nach dem Vorbild von Bloons TD 6** — die Maiskolben der Republik Maiskolbistan verteidigen ihre Felder gegen die invasive Schädlingsschar! 🐛💣
+**Ein Web-Tower-Defense nach dem Vorbild von Bloons TD 6** — die Maiskolben der Republik Maiskolbistan verteidigen ihre Felder gegen die invasive Schädlingsschar: Monster, Soldaten und Panzer! 👹⚔️🚜
 
 > 🤖 **Dieses Repo wird von Claude Code verwaltet.** Die Arbeitsanweisungen liegen in [CLAUDE.md](./CLAUDE.md). Einfach sagen: *„Lies das Repo und fang an."*
 
 ---
 
-## 🎮 Spielkonzept: Wie Bloons TD 6 — mit ALLEN Mechaniken
+## 🎮 Spielkonzept: BTD6-Gameplay im Maiskolbistan-Setting
 
-Das Spiel ist eine eigenständige Web-Umsetzung des BTD6-Gameplay-Loops im Maiskolbistan-Look. Die folgende Liste ist die **verbindliche Mechanik-Checkliste** (Pflichtumfang, nicht optional):
+Das Spiel ist eine eigenständige Web-Umsetzung des BTD6-Gameplay-Loops mit **eigenem Gegner-Setting**: Monster & Soldaten statt Bloons, Panzer statt MOABs. Es gibt **genau einen Spielmodus (Normal)** — keine Helden, keine Paragone, keine Insta-Türme, keine Powers. Die folgende Liste ist die **verbindliche Mechanik-Checkliste** (Pflichtumfang, nicht optional):
 
 ### 🏗️ Türme & Klassen
-- **4 reguläre Klassen** wie in BTD6:
+- **4 Klassen**:
   - 🌾 **Primär** (Basis-Türme, günstig & zuverlässig)
   - 🎖️ **Militär** (flexibel, Spezialfähigkeiten, teuer)
-  - ✨ **Magie** (Energie, Spezialeffekte — Achtung: wirkt nicht auf Purpur-Bloons)
+  - ✨ **Magie** (Energie, Spezialeffekte — Achtung: wirkt nicht auf Arkanschimmer-Gegner)
   - 🛠️ **Support** (Buff-Türme, Wirtschaft, Verlangsamung, Platz-Umstellung)
-- **Helden** 👑: Genau **1 Held pro Spiel**, levelt **automatisch per XP** (Level 1–20), hat eigene Aktiv-Fähigkeiten mit Cooldowns und wählbare Skins.
+- **Turm-Skins/Kosmetik** 🎨 optional über den Trophäen-Shop.
 
 ### 🔺 Upgrade-System
 - Jeder Turm hat **3 Upgrade-Wege mit je 5 Stufen** (T1–T5).
 - **Crosspathing nach BTD6-Regel („5-2-2")**: Ein Weg geht auf **T5**, genau **ein weiterer** auf **T2** — der dritte Weg schließt sich damit.
 - **Turm-XP**: Upgrades werden per Turm-XP freigeschaltet (separat vom In-Game-Geld), genau wie in BTD6.
-- **Paragone** 🌟 (höchste Stufe): kombinieren alle drei T5-Varianten eines Turms.
-  - Kauf nur möglich, wenn **alle 3 T5-Türme** des Typs auf dem Feld stehen → sie verschmelzen (alle Türme desselben Typs werden absorbiert).
-  - **Paragon-Degree 1–100**, abhängig von investiertem Geld, gepoppten Bloons, erzeugtem Cash der absorbierten Türme usw.
-  - Enorme Bonuskraft speziell gegen **Boss-Bloons**.
 
-### 🎈 Bloons — komplett wie BTD6
-| Bloon | Besonderheit / Immunität |
+### 👹 Gegner — Monster & Soldaten (statt Bloons)
+Gegner sind **normale Feinde**: Monster- und Soldaten-Truppen, die in Wellen angreifen. Beim Tod geben viele Gegner **niedrigere Stufen frei** (Spaltungs-Prinzip wie bei Bloons — das bleibt Teil der Wellenlogik).
+
+| Gegner | Besonderheit / Immunität |
 |---|---|
-| 🔴 Rot, 🔵 Blau, 🟢 Grün, 🟡 Gelb, 🩷 Pink | Basis (lassen Kinder beim Poppen frei) |
-| ⚫ Schwarz | immun gegen **Explosionen** |
-| ⚪ Weiß | immun gegen **Frost/Eis** |
-| 🟣 Purpur | immun gegen **Energie, Plasma & Feuer** |
-| 🟤 Blei | immun gegen **scharfe** Projektile |
-| 🦓 Zebra | immun gegen Explosionen **UND** Frost |
-| 🌈 Regenbogen | mehr HP, poppt in Zwei auf |
-| 🏺 Ceramic | 10 HP-Hülle, danach sehr schnell |
-| ✈️ **MOAB-Klasse**: MOAB, BFB, ZOMG, DDT, BAD | riesige Luftschiffe; **BAD** immun gegen Slowdown/Knockback/Instakill; **DDT** = Camo + Schwarz-Eigenschaften + sehr schnell |
-| 🌋 **Boss-Bloons**: Bloonarius, Lych, Vortex, Dreadbloon, Phayze, Blastapopoulos | Boss-Events mit **5 HP-Stufen** je **Normal & Elite** |
+| 🗡️ **Soldaten (Stufe 1–5)** | Basis-Gegner; Tod lässt die nächste niedrigere Stufe frei |
+| 🕷️ **Schwarzkrabbler** | immun gegen **Explosionen** |
+| ❄️ **Eisgeist** | immun gegen **Frost/Eis** |
+| 🔮 **Arkanschimmer** | immun gegen **Energie, Plasma & Feuer** |
+| ⚙️ **Eisenrüstung** | immun gegen **scharfe** Projektile |
+| 🐺 **Graubalg** | immun gegen Explosionen **UND** Frost |
+| 🌈 **Prisma-Geist** | deutlich mehr HP, teilt sich beim Tod in zwei |
+| 🗿 **Keramik-Golem** | 10 HP-Hülle, danach sehr schnell |
 
-### 🎈 Bloon-Eigenschaften (auf jedem Bloon möglich)
-- 🫥 **Camo** (nur mit Camo-Erkennung treffbar)
-- ♻️ **Regrow** (regeneriert nach oben)
-- 🛡️ **Fortified** (doppelte HP; Blei ×4)
+### 🚜 Panzer (die schweren Gegner)
+| Panzer | Verhalten |
+|---|---|
+| 🚜 **Leichter Panzer** | mittlere HP, normal schnell |
+| 🚛 **Schwerer Panzer** | hohe HP, lässt Leichte Panzer frei |
+| 🚂 **Superpanzer** | sehr hohe HP |
+| 🏍️ **Tarnpanzer** | **getarnt** 🫥, sehr schnell, immun gegen Explosionen |
+| 🦣 **Koloss-Panzer** | der Stärkste; immun gegen Verlangsamung, Rückstoß & Instakill |
+
+### 🐉 Endgegner (Boss-Kämpfe)
+- **6 wechselnde Endgegner** (riesige Monster) in wöchentlichen Boss-Events.
+- Je Endgegner **5 HP-Stufen**, jeweils in **Normal & Elite**.
+
+### 🎭 Gegner-Eigenschaften (auf jedem Gegner möglich)
+- 🫥 **Getarnt** (nur mit Tarn-Erkennung treffbar)
+- ♻️ **Regenerierend** (heilt sich nach oben)
+- 🛡️ **Gepanzert** (doppelte HP; Eisenrüstung ×4)
 
 ### 🔢 Runden & Freeplay
-- Standard-Runden **1–100** mit BTD6-typischer Wellenlogik (Kind-Bloons, Cluster, Skalierung).
+- Standard-Runden **1–100** mit BTD6-typischer Wellenlogik (Spaltungen, Cluster, Skalierung).
 - **Freeplay** ab Runde 101+ (abnehmendes Pop-Geld pro Runde, wie BTD6).
 
-### 🏔️ Schwierigkeitsgrade & Modi (alle BTD6-Modi)
-| Modus | Regeln |
-|---|---|
-| 🟢 Easy | 200 Leben, 0,85× Preise, Runde 1–40 |
-| 🟡 Medium | 150 Leben, Standard, Runde 1–60 |
-| 🟠 Hard | 100 Leben, 1,08× Preise, Runde 3–80 |
-| 🔴 Impoppable | 1 Leben, 1,2× Preise, keine Continues, Runde 6–100 |
-| 💀 **CHIMPS** | kein **C**ontinue, keine **H**earts-Heilung, kein Extra-**I**ncome, kein **M**onkey-Knowledge, keine **P**owers, kein **S**elling — 1 Leben |
-
-Zusatz-Modi: **Nur Primär / Nur Militär / Nur Magie**, **Deflation**, **Apopalypse**, **Reverse**, **Doppelte-MOAB-HP**, **Halbes Geld**, **Alternative Bloon-Runden**, **Double Cash**, **Fast Track**, **Sandbox**, **Co-op**.
+### 🎯 Spielmodus
+Es gibt **genau einen Modus: Normal** — keine Schwierigkeitsgrade, keine Zusatz-Modi.
+- 150 Leben, Standard-Preise, Runde 1–100.
+- Continue gegen Kolbenmünzen möglich.
+- Verlust = alle Leben aufgebraucht → Spielende (Neustart möglich).
 
 ### 💰 Wirtschaft
-- Pop-Geld je Bloon, Rundenende-Einkommen, **Einkommens-Türme** (Banana-Farm-Äquivalent 🌽), **Verkaufen** für 70–75 % des Werts (in CHIMPS verboten), Continue-Kosten je Schwierigkeit.
+- Pop-Geld je Gegner, Rundenende-Einkommen, **Einkommens-Türme** (Banana-Farm-Äquivalent 🌽), **Verkaufen** für 70–75 % des Werts.
 
 ### ⚡ Fähigkeiten & Buffs
-- Aktiv-Fähigkeiten mit Cooldowns (v. a. Helden), Support-Buffs (Reichweite, Feuerrate, Pierce, Schaden, Camo-Entdeckung), **Sichtlinien** & Platzierungsregeln (Wasser/Land, Footprint, Hindernisse).
+- Aktiv-Fähigkeiten mit Cooldowns bei bestimmten Türmen, Support-Buffs (Reichweite, Feuerrate, Pierce, Schaden, Tarn-Entdeckung), **Sichtlinien** & Platzierungsregeln (Wasser/Land, Footprint, Hindernisse).
 
 ### 🧠 Meta-Progression
-- **Kolbenmünzen** 🪙 (In-Game-Metawährung, das BTD6-„Monkey Money"): für Helden, Helden-Skins, Continues, Powers.
-- **Monkey Knowledge** 📚: 6 Skill-Bäume (Primär/Militär/Magie/Support/Helden/Powers) mit permanenten Boni (in CHIMPS deaktiviert).
-- **Insta-Türme** 🎟️: einmalig platzierbare Türme mit voreingestellten Upgrades (gelten als Powers).
-- **Powers** ⏩: z. B. Turbo-Boost, Cash-Drop, Super-Sturm, Zeitstopp.
-- **Trophäen-Shop** 🏆 (Event-Währung gegen Kosmetik), **Medaillen** pro Map×Modus, **Achievements**.
+- **Kolbenmünzen** 🪙 (In-Game-Metawährung): für Continues und Kosmetik.
+- **Monkey Knowledge** 📚: 4 Skill-Bäume (Primär/Militär/Magie/Support) mit permanenten Boni.
+- **Trophäen-Shop** 🏆 (Event-Währung gegen Kosmetik), **Medaillen** pro Map, **Achievements**.
 
 ### 🗺️ Maps
 - 4 Map-Schwierigkeiten (Anfänger → Experte), mehrere Pfade, **Sichtlinien**, Wasser/Land-Platzierung.
@@ -80,7 +82,7 @@ Zusatz-Modi: **Nur Primär / Nur Militär / Nur Magie**, **Deflation**, **Apopal
 ### 🏁 Events (wöchentlich rotierend)
 - 🏃 **Rennen** (Time-Trial: feste Runden so schnell wie möglich, Leaderboard)
 - 🗺️ **Odysseen** (3–5 Maps am Stück, verknüpfter Lebenspool, Türme wandern mit)
-- 🌋 **Boss-Events** (Normal & Elite, 5 HP-Stufen)
+- 🐉 **Endgegner-Events** (Normal & Elite, 5 HP-Stufen)
 - 📦 **Sammlungs-Events**, **Daily Challenges**, **Contested-Territory-artiges Liga-Event**
 
 ---
@@ -90,7 +92,7 @@ Zusatz-Modi: **Nur Primär / Nur Militär / Nur Magie**, **Deflation**, **Apopal
 - **Reines Web-Frontend** (TypeScript, Canvas/WebGL — keine Engine-Runtimes) → läuft in jedem Browser, mobil & Desktop.
 - **Performance-Ziele (hart):** stabile 60 FPS auch bei 1000+ Objekten gleichzeitig.
   - Fixed-Timestep-Loop mit Interpolation
-  - **Object Pooling** für Bloons/Projektile/Partikel (keine GC-Spikes)
+  - **Object Pooling** für Gegner/Projektile/Partikel (keine GC-Spikes)
   - **Spatial Grid / Quadtree** statt O(n²)-Kollisionen
   - Offscreen-Canvas-Layer, Sprite-Atlanten, Asset-Streaming, Lazy-Loading
   - Initial-Bundle klein halten (< 500 KB gzip)

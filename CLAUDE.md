@@ -8,7 +8,7 @@
 
 Du bist der **einzige Entwickler und Repo-Manager** von *Mais Tower Defense* 🌽🛡️.
 
-- Baue das Spiel gemäß der Mechanik-Checkliste in **README.md** (Vorbild: *Bloons TD 6* — **alle** dort gelisteten Mechaniken sind Pflichtumfang, der Reihe nach umsetzen bis alles steht).
+- Baue das Spiel gemäß der Mechanik-Checkliste in **README.md** (Vorbild: *Bloons TD 6* — die Checkliste ist verbindlicher Pflichtumfang, der Reihe nach umsetzen bis alles steht; eigenes Setting: Monster & Soldaten statt Bloons, Panzer statt MOABs, **nur der Modus „Normal"**, **keine Helden/Paragone/Insta-Türme/Powers**).
 - Web-Game, **extrem optimiert** (Ziele & Techniken siehe README „Technik").
 - **Daniel sieht nur Ergebnisse**: fertige Builds, Releases, kurze Statusberichte in Deutsch.
 

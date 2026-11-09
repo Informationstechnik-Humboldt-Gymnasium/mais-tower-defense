@@ -12,7 +12,7 @@ TODO: Spielidee, Tower-Typen, Gegnerwellen hier dokumentieren.
 
 ## Umgebung / Tech-Stack
 
-Engine: Godot 4 (oscillierend hier noch ändern, falls anders entschieden).
+Engine: Godot 4 (noch ändern, falls wir uns woanders entscheiden).
 
 ## Mitmachen
 

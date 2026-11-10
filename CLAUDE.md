@@ -29,35 +29,37 @@ Drei getrennte Welten — nichts vermischen:
 
 | System | Zweck | Regeln |
 |---|---|---|
-| **Cloudflare D1** | Spielkonten (Username/Passwort) + alle Spieldaten (Spielstände, Fortschritt, Highscores, Meta-Progression) | Migrationen laufen **automatisch bei jedem Deploy** (`wrangler d1 migrations apply` im Deploy-Script) → einmal verbunden, aktualisiert sich die DB von selbst |
-| **Maiskolbistan-Supabase** | **NUR die Wallet**: Maisdollar-Guthaben lesen + Abo-Abbuchung schreiben | Das ist das Bürgerportal-Backend eines Mitstreiters. **Schema NIEMALS ändern**, nur über die etablierte Zugriffsmethode konsumieren. Zugriffsweise/Credentials: im Org-Geschwister-Repo **`app-buergerportal`** bzw. dessen lokaler Kopie nachschauen und identisch übernehmen |
-| **Self-Hosted DB** | Alternative für eigene Infrastruktur (SQLite oder Postgres) | Gleiches Schema, gleiche Migrationen, umschaltbar über `DB_ADAPTER` — Funktionsweise in README dokumentiert, Commands pflegst du in SETUP.md |
+| **Cloudflare D1** | Spielkonten (verknüpft über die Bürgerportal-Benutzer-ID, **ohne Passwörter**) + alle Spieldaten (Spielstände, Fortschritt, Highscores, Meta-Progression), Sitzungen, Abo-Status | Migrationen in `api/migrations/` laufen **automatisch bei jedem Deploy** (`wrangler d1 migrations apply` im Workflow) → einmal verbunden, aktualisiert sich die DB von selbst |
+| **Maiskolbistan-Supabase** | **Anmeldung** (Supabase Auth des Bürgerportals) + **Wallet** (Abo-Überweisung per Bank-RPC) | Bürgerportal-Backend (Repo `nikesieg4/dPUbtsXv3y` = ABIS-Konsole; Portal-URL und öffentlicher anon-Key stehen dort in `src/config.js`). **Schema NIEMALS ändern**, nur über die etablierte Zugriffsmethode konsumieren: Supabase Auth + Bank-RPCs mit dem Token des Bürgers (RLS/security-definer prüfen dort). Keine Spieldaten dort ablegen |
+| **Self-Hosted DB** | Alternative für eigene Infrastruktur (SQLite; Postgres geplant) | Gleiches Schema, gleiche Migrationen, umschaltbar über `DB_ADAPTER` — Funktionsweise in README dokumentiert, Commands pflegst du in SETUP.md |
 
-## 4. Konten, Passwörter & Abo-Logik (Pflicht-Spezifikation)
+## 4. Konten, Anmeldung & Abo-Logik (Pflicht-Spezifikation)
 
-### Spielkonto (in D1)
-- Separates Konto mit **Username + Passwort** — unabhängig von Maiskolbistan.
-- Passwörter: **Argon2id**-Hash, einzigartiger 16-Byte-Salt pro User, Pepper aus Server-Secret, timing-sicherer Vergleich. Keine Klartext-Passwörter, keine schwachen Hashes. Den Pepper/Secrets niemals in Repo oder Client-Build.
+### Anmeldung mit dem Bürgerportal-Konto (Entscheidung Daniel)
+- Spieler melden sich mit ihren **Bürgerportal-Zugangsdaten** an (E-Mail + Passwort; Kurzname `admin`/`administrator` wie im Portal).
+- Der **Worker** prüft die Zugangsdaten serverseitig gegen Supabase Auth. Das Spiel **speichert keine Passwörter** und legt im Bürgerportal **kein Konto an**.
+- In D1 entsteht beim ersten Login ein Spielkonto, verknüpft über die Bürgerportal-Benutzer-ID.
+- Danach eigene Sitzung: Zugriffstoken (JWT HS256, 15 min) + rotierendes Refresh-Token (30 Tage, nur SHA-256-Hash in D1). `SESSION_SECRET` nur als Secret.
 
-### Maiskolbistan = reines Zahlungsmittel
-- Dort wohnt die **Maisdollar**-Währung. Das Spiel nutzt sie **nur** für die Abo-Zahlung.
-- Es wird **dort kein zusätzliches Konto angelegt** — das Spielkonto existiert nur in D1.
+### Maiskolbistan = Zahlungsmittel
+- Dort wohnt die **Maisdollar**-Währung. Das Spiel nutzt sie **nur** für die Abo-Zahlung (Überweisung auf das Spielkonto im Bürgerportal).
 
 ### Monatsabo: 500 Maisdollar
-Beim **jeden Login** serverseitig (Worker!) prüfen:
+Bei **jedem Login** serverseitig (Worker!) prüfen:
 
-1. `last_payment_month` des Spielkontos == aktueller Monat? → **Login frei** (Monat schon bezahlt).
-2. Sonst (erster Login des Monats): Maisdollar-Guthaben in Maiskolbistan lesen.
-   - Guthaben ≥ 500 → **500 abbuchen**, `last_payment_month` setzen, Login freigeben.
-   - Guthaben < 500 → **Login ablehnen**, klare Meldung: „Abo fällig — 500 Maisdollar benötigt".
-- Abbuchung atomar/sicher gestalten (keine Doppelabbuchung bei Parallel-Logins: zeilenweise Transaktion bzw. bedingtes Update `WHERE balance >= 500`).
+1. `last_payment_month` des Spielkontos == aktueller Monat (Zeitzone Berlin)? → **Login frei**.
+2. Sonst (erster Login des Monats): 500 Maisdollar per Bank-RPC (`WALLET_TRANSFER_RPC`) vom Konto des Bürgers an `WALLET_RECIPIENT` überweisen, **mit dem Token des Bürgers**.
+   - Erfolgreich → `last_payment_month` setzen, Login freigeben.
+   - `insufficient_funds` → **Login ablehnen**: „Abo fällig — 500 Maisdollar benötigt".
+- Keine Doppelabbuchung: genau eine `payments`-Zeile pro Spieler und Monat, deterministischer Idempotenz-Schlüssel `mtd-abo-<uid>-<monat>-<versuch>` (parallele Logins teilen ihn; das Portal bucht nur einmal ab).
+- Neuer Monat → Refresh wird abgelehnt, Neuanmeldung (mit Abo-Prüfung) nötig.
 - **Die gesamte Logik serverseitig** — der Client erfährt nur das Ergebnis.
 
 ## 5. Sicherheit (verbindlich, „mach die Datenbank sicher")
 
 - Ausschließlich **parameterisierte Queries**; Input-Validierung an jeder Systemgrenze.
 - Strikte **Rate-Limits** auf Login-/Payment-Endpunkte; Auth-Tokens kurzlebig + Refresh.
-- Secrets (D1-Binding, Supabase-Zugang, Pepper) **nur** via `wrangler secret put` / Server-Env — niemals im Git, niemals im Client-Bundle.
+- Secrets (`SESSION_SECRET`, `SUPABASE_ANON_KEY`, Cloudflare-Token) **nur** via `wrangler secret put` / Server-Env — niemals im Git, niemals im Client-Bundle.
 - Least Privilege: DB-User darf nur das Nötigste; separates Material für die Wallet.
 - Fehlermeldungen nie internals verraten; Logging ohne PII/Passwörter.
 - Wenn du eine Schwachstelle siehst: fixen und im kurzen Bericht erwähnen.

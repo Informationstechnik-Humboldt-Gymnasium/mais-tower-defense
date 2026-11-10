@@ -27,6 +27,9 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          # Adresse der API (Repo-Variable API_URL). Leer = Spiel ohne Anmeldung.
+          VITE_API_URL: ${{ vars.API_URL }}
         run: npm run build
 
       - name: Netlify-ZIP
@@ -66,3 +69,43 @@ jobs:
           awk -v t="## ${TAG}" '$0==t{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
           [ -s notes.md ] || echo "Version ${TAG}" > notes.md
           gh release create "$TAG" "$ZIP" --title "$TAG" --notes-file notes.md --target "$GITHUB_SHA"
+
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      - name: Abhängigkeiten (API)
+        run: npm ci --prefix api
+
+      - name: Typprüfung und Integrationstests (API)
+        run: npm --prefix api run check && npm --prefix api test
+
+      # Läuft nur, wenn Cloudflare eingerichtet ist (siehe SETUP.md). Migrationen zuerst -> DB aktualisiert sich selbst.
+      - name: Migrationen anwenden und Worker deployen
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          D1_ID: ${{ secrets.D1_DATABASE_ID }}
+          WALLET_RPC: ${{ vars.WALLET_TRANSFER_RPC }}
+          WALLET_RECIPIENT: ${{ vars.WALLET_RECIPIENT }}
+          ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ] || [ -z "$D1_ID" ]; then
+            echo "Cloudflare ist noch nicht eingerichtet – Deploy übersprungen."
+            exit 0
+          fi
+          cd api
+          sed -i "s/00000000-0000-0000-0000-000000000000/${D1_ID}/" wrangler.toml
+          npx wrangler d1 migrations apply maistd --remote
+          ARGS=()
+          [ -n "$WALLET_RPC" ] && ARGS+=(--var "WALLET_TRANSFER_RPC:${WALLET_RPC}")
+          [ -n "$WALLET_RECIPIENT" ] && ARGS+=(--var "WALLET_RECIPIENT:${WALLET_RECIPIENT}")
+          [ -n "$ORIGINS" ] && ARGS+=(--var "ALLOWED_ORIGINS:${ORIGINS}")
+          npx wrangler deploy "${ARGS[@]}"

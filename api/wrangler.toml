@@ -1,0 +1,21 @@
+# Cloudflare Worker: Mais Tower Defense API
+# Secrets (NIE hier eintragen): wrangler secret put SUPABASE_ANON_KEY / SESSION_SECRET
+name = "mais-tower-defense-api"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[vars]
+SUPABASE_URL = "https://tyfdwdzglguiiqbsttav.supabase.co"
+# Name der Überweisungs-Funktion (RPC) im Bürgerportal — siehe SETUP.md
+WALLET_TRANSFER_RPC = ""
+# Ziel der Abo-Zahlung (Konto des Spiels im Bürgerportal)
+WALLET_RECIPIENT = ""
+ABO_PRICE_MINOR = "50000"
+# Erlaubte Frontend-Adressen (Komma-getrennt)
+ALLOWED_ORIGINS = "https://informationstechnik-humboldt-gymnasium.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "maistd"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"

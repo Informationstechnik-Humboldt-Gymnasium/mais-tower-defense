@@ -1,0 +1,18 @@
+{
+  "name": "mais-tower-defense-api",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "dev": "wrangler dev",
+    "deploy": "wrangler d1 migrations apply maistd --remote && wrangler deploy",
+    "selfhost": "node --experimental-strip-types --disable-warning=ExperimentalWarning server/node.ts",
+    "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning test/integration.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "5.9.3",
+    "wrangler": "4.151.2"
+  }
+}

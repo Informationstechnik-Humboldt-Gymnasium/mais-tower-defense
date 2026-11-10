@@ -4,6 +4,8 @@ import { TOWERS, TowerDef } from './sim/towers';
 import { TICK, Tower, World } from './sim/world';
 import { Ghost, Renderer } from './render/renderer';
 import { Hud } from './ui/hud';
+import { API_URL, logout } from './net/api';
+import { requireLogin } from './ui/login';
 
 declare const __APP_VERSION__: string;
 document.getElementById('ver')!.textContent = 'v' + __APP_VERSION__;
@@ -39,7 +41,7 @@ function restart(): void {
   const side = document.getElementById('side')!;
   const top = document.getElementById('topbar')!;
   side.replaceChildren();
-  top.querySelectorAll(':scope > :not(.brand)').forEach((n) => n.remove());
+  top.querySelectorAll(':scope > :not(.brand):not(.who)').forEach((n) => n.remove());
   stage.querySelectorAll('.toast').forEach((n) => n.remove());
   const speed = hud?.speed ?? 1;
   hud = new Hud(world, root, callbacks);
@@ -165,8 +167,25 @@ function frame(now: number): void {
   requestAnimationFrame(frame);
 }
 
-restart();
-requestAnimationFrame(frame);
+async function boot(): Promise<void> {
+  if (API_URL) {
+    const player = await requireLogin();
+    const who = document.createElement('div');
+    who.className = 'who';
+    const out = document.createElement('button');
+    out.className = 'btn btn-small';
+    out.textContent = 'Abmelden';
+    out.onclick = async () => {
+      await logout();
+      location.reload();
+    };
+    who.append(document.createTextNode(player.name), out);
+    document.querySelector('.brand')!.after(who);
+  }
+  restart();
+  requestAnimationFrame(frame);
+}
+void boot();
 
 // Test-Schnittstelle für automatisierte Smoke-Tests (keine Geheimnisse, nur Spielzustand)
 (window as unknown as { __mtd: unknown }).__mtd = {

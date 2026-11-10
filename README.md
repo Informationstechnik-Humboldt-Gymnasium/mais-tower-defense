@@ -128,22 +128,22 @@ flowchart LR
 ```
 
 ### 1. Cloudflare D1 — Spielkonten & Spieldaten
-- **Separate Spiel-Konten** (Username + Passwort) — bewusst getrennt vom Maiskolbistan-System.
-- Spielstände, Fortschritt, Meta-Progression, Highscores.
-- Passwörter: **Argon2id** mit per-User-Salt (+ Pepper via Server-Secret) — niemals Plaintext, niemals MD5/SHA1/SHA256-allein.
-- Schema-Migrationen laufen **automatisch bei jedem Deploy** → die DB aktualisiert sich von selbst, sobald sie einmal verbunden ist.
+- Spielkonten werden beim ersten Login automatisch angelegt und über die **Benutzer-ID des Bürgerportals** verknüpft — das Spiel speichert **keine Passwörter**.
+- Spielstände, Fortschritt, Meta-Progression, Highscores, Sitzungen (nur gehashte Refresh-Tokens), Abo-Status.
+- Schema-Migrationen (`api/migrations/`) laufen **automatisch bei jedem Deploy** → die DB aktualisiert sich von selbst, sobald sie einmal verbunden ist.
 
-### 2. Maiskolbistan-Supabase — NUR die Wallet
-- Das bestehende **Bürgerportal-Backend** (Supabase; wird vom Mitstreiter betrieben — Schema bleibt unangetastet, wird exakt so konsumiert, wie es ist).
-- Wird **ausschließlich als Zahlungsmittel-Quelle** verwendet: **Maisdollar**.
-- Kein Spielkonto dort, keine Spieldaten dort — nur das Maisdollar-Guthaben **lesen** und die Abo-Abbuchung **schreiben**.
+### 2. Maiskolbistan-Supabase — Anmeldung + Wallet
+- Das bestehende **Bürgerportal-Backend** (Supabase; Schema bleibt unangetastet, wird exakt so konsumiert, wie es ist).
+- **Anmeldung:** Spieler melden sich mit ihrem **Bürgerportal-Konto** an (E-Mail + Passwort). Die API prüft das serverseitig über Supabase Auth.
+- **Zahlungsmittel:** Maisdollar. Die Abo-Zahlung ist eine normale Überweisung per Bank-Funktion des Portals vom Konto des Bürgers auf das Konto des Spiels.
+- Keine Spieldaten dort, kein zusätzliches Konto dort.
 
 ### Abo-Logik: 500 Maisdollar / Monat
 - Das Spiel kostet ein **Monatsabo von 500 Maisdollar**.
 - **Beim Login** prüft die API:
   1. Wurde **in diesem Kalendermonat** schon bezahlt? → Login frei.
-  2. Wenn nicht (erster Login des Monats): Maisdollar-Guthaben in Maiskolbistan prüfen → wenn ≥ 500: **500 Maisdollar abbuchen**, Monatsmarke im Spielkonto setzen, Login freigeben.
-  3. Wenn Guthaben < 500: Login ablehnen mit klarer Meldung („Abo fällig — 500 Maisdollar benötigt").
+  2. Wenn nicht (erster Login des Monats): **500 Maisdollar überweisen** (Bank-Funktion des Portals, Idempotenz-Schlüssel pro Spieler und Monat → keine Doppelabbuchung), Monatsmarke im Spielkonto setzen, Login freigeben.
+  3. Guthaben reicht nicht: Login ablehnen mit klarer Meldung („Abo fällig — 500 Maisdollar benötigt").
 - Die Abbuchung läuft **komplett serverseitig** (Worker), nie im Client.
 
 ### 3. Self-Hosted Datenbank (Alternative) — Anleitung
@@ -153,13 +153,13 @@ Das Spiel ist **portabel**: Die API spricht über einen Datenbank-Adapter mit zw
 1. Node.js ≥ 20 installieren.
 2. Repo klonen und in `SETUP.md` (pflegt Claude) die Copy-Paste-Commands abarbeiten:
    ```bash
-   npm install
+   npm install --prefix api
    DB_ADAPTER=sqlite DB_FILE=./maistd.db npm run api
    ```
 3. Frontend per Build-Umgebungsvariable auf die eigene API zeigen lassen (`VITE_API_URL=http://dein-server:8787`).
 4. Migrationen laufen beim API-Start automatisch → Datenbank ist fertig.
 
-**Variante B: Postgres per Docker auf eigenem Server**
+**Variante B: Postgres per Docker auf eigenem Server** (noch nicht umgesetzt — geplant)
 ```bash
 docker run -d --name maistd-db -e POSTGRES_PASSWORD=STARKES_PASSWORT -e POSTGRES_DB=maistd -p 5432:5432 postgres:16
 DB_ADAPTER=postgres DATABASE_URL=postgres://postgres:STARKES_PASSWORT@localhost:5432/maistd npm run api
@@ -170,12 +170,12 @@ DB_ADAPTER=postgres DATABASE_URL=postgres://postgres:STARKES_PASSWORT@localhost:
 ---
 
 ## Sicherheitsanforderungen (verbindlich)
-- Passwort-Hashing: **Argon2id**, einzigartiger 16-Byte-Salt pro User, Pepper aus Server-Secret, timing-sicherer Vergleich.
+- **Keine Passwörter im Spiel:** Anmeldung über das Bürgerportal (serverseitig), eigene Sitzungen mit kurzlebigem JWT + rotierendem Refresh-Token (nur als Hash gespeichert).
 - Strikte **Rate-Limits** auf Login- & Payment-Endpunkte.
 - **Ausschließlich parameterisierte Queries** (kein SQL-Injection-Risiko), Input-Validierung an jeder Grenze.
 - Kurzlebige Auth-Tokens mit Refresh; komplette Zahlungs- & Login-Logik **serverseitig**.
 - Secrets nur via `wrangler secret put` — **niemals** ins Repo, niemals in den Client-Build.
-- Maiskolbistan-DB nur über die im Bürgerportal etablierte Zugriffsmethode nutzen — **keine Schema-Änderungen**, kein direkter Schreibzugriff außer der Abo-Abbuchung.
+- Maiskolbistan-DB nur über die im Bürgerportal etablierte Zugriffsmethode nutzen (Supabase Auth + Bank-RPCs mit dem Token des Bürgers) — **keine Schema-Änderungen**, kein Schreibzugriff außer der Abo-Überweisung.
 
 ---
 

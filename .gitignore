@@ -3,3 +3,7 @@ dist/
 release/
 *.zip
 .DS_Store
+.wrangler/
+*.db
+*.db-shm
+*.db-wal

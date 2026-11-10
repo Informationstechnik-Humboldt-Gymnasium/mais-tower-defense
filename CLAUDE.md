@@ -68,11 +68,8 @@ Vorerst läuft das Spiel über **GitHub Pages**; parallel gibt es **immer eine N
 
 1. Version in `package.json` bumpen (SemVer) und Abschnitt `## vX.Y.Z` in `CHANGELOG.md` schreiben (kurze deutsche Änderungsliste).
 2. Lokal verifizieren: `npm run build && npm run smoke`.
-3. Direkt pushen (kein PR!) und taggen:
-   ```bash
-   git push origin <branch> && git tag vX.Y.Z && git push origin vX.Y.Z
-   ```
-4. Der Workflow baut bei jedem Push und veröffentlicht `dist/` auf dem Branch `gh-pages` (GitHub Pages). Beim Tag erstellt er das GitHub-Release mit `mais-tower-defense-vX.Y.Z-netlify.zip` und den Notizen aus `CHANGELOG.md`.
+3. Direkt pushen (kein PR!): `git push origin <branch>`.
+4. Der Workflow baut bei jedem Push und veröffentlicht `dist/` auf dem Branch `gh-pages` (GitHub Pages). Ist die Version aus `package.json` neu, erzeugt er Tag `vX.Y.Z` und das GitHub-Release mit `mais-tower-defense-vX.Y.Z-netlify.zip` und den Notizen aus `CHANGELOG.md` selbst (manuelles Taggen ist nicht nötig).
 5. Sobald die API existiert: Migrationen anwenden (`wrangler d1 migrations apply …`) und Worker deployen.
 6. Daniel kann die ZIP aus den Releases laden und auf Netlify ziehen. `dist/` muss so bleiben, dass **drag & drop auf Netlify** ohne Nacharbeiten funktioniert (relative Pfade, `_redirects`/`_headers`).
 

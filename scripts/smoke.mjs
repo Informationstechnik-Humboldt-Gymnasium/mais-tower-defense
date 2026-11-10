@@ -9,7 +9,9 @@ const PORT = 4173;
 const URL = `http://localhost:${PORT}/`;
 const shot = process.argv.includes('--shot') ? process.argv[process.argv.indexOf('--shot') + 1] : null;
 
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'pipe' });
+const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'pipe', detached: true });
+const stopServer = () => { try { process.kill(-server.pid); } catch {} };
+server.on('exit', (code) => { if (code) { console.error('vite preview beendet (Port belegt?)'); process.exit(1); } });
 await new Promise((res, rej) => {
   const to = setTimeout(() => rej(new Error('preview start timeout')), 20000);
   server.stdout.on('data', (d) => { if (String(d).includes(String(PORT))) { clearTimeout(to); res(); } });
@@ -122,6 +124,6 @@ try {
   check('Keine Konsolenfehler', errors.length === 0, errors.slice(0, 3).join(' | '));
 } finally {
   await browser.close();
-  server.kill();
+  stopServer();
 }
 process.exit(failed ? 1 : 0);

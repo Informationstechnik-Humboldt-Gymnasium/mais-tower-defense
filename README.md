@@ -2,6 +2,8 @@
 
 **Ein Web-Tower-Defense mit dem Spielablauf von Bloons TD 6 und Türmen nach dem Vorbild von Tower Defense X (Roblox).** Die Maiskolben der Republik Maiskolbistan verteidigen ihre Felder gegen die invasive Schädlingsschar: Monster, Soldaten und Panzer.
 
+**Jetzt spielen:** https://informationstechnik-humboldt-gymnasium.github.io/mais-tower-defense/ (GitHub Pages) — oder die Netlify-ZIP aus den [Releases](../../releases) nehmen. Einrichtung: [SETUP.md](./SETUP.md).
+
 > **Dieses Repo wird von Claude Code verwaltet.** Die Arbeitsanweisungen liegen in [CLAUDE.md](./CLAUDE.md). Einfach sagen: *„Lies das Repo und fang an."*
 
 ---
@@ -178,7 +180,7 @@ DB_ADAPTER=postgres DATABASE_URL=postgres://postgres:STARKES_PASSWORT@localhost:
 ---
 
 ## Deployment & Releases
-- **Frontend:** Netlify (Release-ZIP herunterladen → auf Netlify ziehen, oder Netlify-CLI).
+- **Frontend:** vorerst **GitHub Pages** (automatisch bei jedem Push über GitHub Actions, Branch `gh-pages`) und zusätzlich **Netlify** (Release-ZIP herunterladen → auf Netlify ziehen, oder Netlify-CLI).
 - **API:** Cloudflare Worker mit D1-Bindung; Migrationen greifen automatisch bei jedem Deploy.
 - **Jede neue Version** bekommt automatisch:
   1. einen Commit **direkt auf dem Branch** (kein Pull Request),

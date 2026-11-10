@@ -1,0 +1,17 @@
+{
+  "name": "mais-tower-defense",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173 --strictPort",
+    "smoke": "node scripts/smoke.mjs",
+    "zip": "node scripts/zip.mjs"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vite": "6.4.6"
+  }
+}

@@ -1,4 +1,5 @@
-Godot 4+
-.godot/
+node_modules/
 dist/
+release/
+*.zip
 .DS_Store

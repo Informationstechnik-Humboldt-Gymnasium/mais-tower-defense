@@ -1,5 +1,6 @@
 name: Build, Pages & Release
 
+# Läuft bei jedem Push und per Knopf ("Run workflow") — auch vom iPad aus.
 on:
   push:
     branches: [main, 'claude/**']
@@ -13,7 +14,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # 1) API testen und — sobald Cloudflare eingerichtet ist — komplett selbst einrichten und deployen
+  api:
+    runs-on: ubuntu-latest
+    outputs:
+      api_url: ${{ steps.deploy.outputs.api_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+
+      - name: Abhängigkeiten (API)
+        run: npm ci --prefix api
+
+      - name: Typprüfung und Integrationstests (API)
+        run: npm --prefix api run check && npm --prefix api test
+
+      - name: Cloudflare einrichten, Migrationen anwenden, Worker deployen
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          WALLET_TRANSFER_RPC: ${{ vars.WALLET_TRANSFER_RPC }}
+          WALLET_RECIPIENT: ${{ vars.WALLET_RECIPIENT }}
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+          NETLIFY_ON: ${{ secrets.NETLIFY_AUTH_TOKEN != '' }}
+          NETLIFY_SITE_NAME: ${{ vars.NETLIFY_SITE_NAME || 'mais-tower-defense-maiskolbistan' }}
+        run: |
+          if [ "$NETLIFY_ON" = "true" ]; then export EXTRA_ORIGIN="https://${NETLIFY_SITE_NAME}.netlify.app"; fi
+          api/scripts/ci-deploy.sh
+
+  # 2) Spiel bauen -> GitHub Pages, Netlify-ZIP, Release
   build:
+    needs: api
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,9 +66,11 @@ jobs:
 
       - name: Build
         env:
-          # Adresse der API (Repo-Variable API_URL). Leer = Spiel ohne Anmeldung.
-          VITE_API_URL: ${{ vars.API_URL }}
-        run: npm run build
+          # API-Adresse: Repo-Variable API_URL (falls gesetzt), sonst automatisch aus dem API-Deploy. Leer = ohne Anmeldung.
+          VITE_API_URL: ${{ vars.API_URL || needs.api.outputs.api_url }}
+        run: |
+          echo "API-Adresse im Build: ${VITE_API_URL:-(keine, Spiel ohne Anmeldung)}"
+          npm run build
 
       - name: Netlify-ZIP
         id: zip
@@ -55,6 +95,13 @@ jobs:
           git commit -qm "deploy: ${GITHUB_SHA::7}"
           git push -qf "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
 
+      # Optional: Netlify automatisch befüllen (Secret NETLIFY_AUTH_TOKEN)
+      - name: Auf Netlify veröffentlichen (falls eingerichtet)
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_NAME: ${{ vars.NETLIFY_SITE_NAME || 'mais-tower-defense-maiskolbistan' }}
+        run: scripts/netlify-deploy.sh "${{ steps.zip.outputs.file }}"
+
       # Release mit ZIP, sobald package.json eine neue Version hat (Tag wird automatisch erzeugt)
       - name: GitHub-Release erstellen (falls Version neu)
         env:
@@ -69,43 +116,3 @@ jobs:
           awk -v t="## ${TAG}" '$0==t{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
           [ -s notes.md ] || echo "Version ${TAG}" > notes.md
           gh release create "$TAG" "$ZIP" --title "$TAG" --notes-file notes.md --target "$GITHUB_SHA"
-
-  api:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: api/package-lock.json
-
-      - name: Abhängigkeiten (API)
-        run: npm ci --prefix api
-
-      - name: Typprüfung und Integrationstests (API)
-        run: npm --prefix api run check && npm --prefix api test
-
-      # Läuft nur, wenn Cloudflare eingerichtet ist (siehe SETUP.md). Migrationen zuerst -> DB aktualisiert sich selbst.
-      - name: Migrationen anwenden und Worker deployen
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          D1_ID: ${{ secrets.D1_DATABASE_ID }}
-          WALLET_RPC: ${{ vars.WALLET_TRANSFER_RPC }}
-          WALLET_RECIPIENT: ${{ vars.WALLET_RECIPIENT }}
-          ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
-        run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ] || [ -z "$D1_ID" ]; then
-            echo "Cloudflare ist noch nicht eingerichtet – Deploy übersprungen."
-            exit 0
-          fi
-          cd api
-          sed -i "s/00000000-0000-0000-0000-000000000000/${D1_ID}/" wrangler.toml
-          npx wrangler d1 migrations apply maistd --remote
-          ARGS=()
-          [ -n "$WALLET_RPC" ] && ARGS+=(--var "WALLET_TRANSFER_RPC:${WALLET_RPC}")
-          [ -n "$WALLET_RECIPIENT" ] && ARGS+=(--var "WALLET_RECIPIENT:${WALLET_RECIPIENT}")
-          [ -n "$ORIGINS" ] && ARGS+=(--var "ALLOWED_ORIGINS:${ORIGINS}")
-          npx wrangler deploy "${ARGS[@]}"

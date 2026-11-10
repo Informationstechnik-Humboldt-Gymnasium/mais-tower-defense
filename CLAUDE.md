@@ -72,12 +72,19 @@ Vorerst läuft das Spiel über **GitHub Pages**; parallel gibt es **immer eine N
 2. Lokal verifizieren: `npm run build && npm run smoke`.
 3. Direkt pushen (kein PR!): `git push origin <branch>`.
 4. Der Workflow baut bei jedem Push und veröffentlicht `dist/` auf dem Branch `gh-pages` (GitHub Pages). Ist die Version aus `package.json` neu, erzeugt er Tag `vX.Y.Z` und das GitHub-Release mit `mais-tower-defense-vX.Y.Z-netlify.zip` und den Notizen aus `CHANGELOG.md` selbst (manuelles Taggen ist nicht nötig).
-5. Sobald die API existiert: Migrationen anwenden (`wrangler d1 migrations apply …`) und Worker deployen.
+5. API: Der Job `api` testet die API und richtet — sobald das Secret `CLOUDFLARE_API_TOKEN` existiert — über `api/scripts/ci-deploy.sh` alles selbst ein (D1 suchen/anlegen, Migrationen, Deploy, Secrets, workers.dev-Adresse). Die API-Adresse fließt automatisch in den Frontend-Build. Optional befüllt `scripts/netlify-deploy.sh` Netlify (Secret `NETLIFY_AUTH_TOKEN`).
 6. Daniel kann die ZIP aus den Releases laden und auf Netlify ziehen. `dist/` muss so bleiben, dass **drag & drop auf Netlify** ohne Nacharbeiten funktioniert (relative Pfade, `_redirects`/`_headers`).
 
 ## 7. SETUP.md für Daniel (pflicht)
 
-Erstelle und **pflege immer aktuell** eine `SETUP.md`: eine **einfache, deutsche Schritt-für-Schritt-Anleitung** zur Einrichtung des kompletten Stacks (Cloudflare-Account, D1 + Worker, Netlify, evtl. self-hosted Variante) — **möglichst viel über Commands gelöst** (Copy-Paste-fähig: `wrangler`, `gh`, `netlify`), damit Daniel kaum Handarbeit hat. Wenn sich am Setup etwas ändert, sofort mitändern.
+Erstelle und **pflege immer aktuell** eine `SETUP.md`: eine **einfache, deutsche Schritt-für-Schritt-Anleitung** zur Einrichtung des kompletten Stacks (GitHub Pages, Cloudflare D1 + Worker, Netlify, Bürgerportal-Anbindung, evtl. self-hosted Variante).
+
+**Daniel richtet alles auf einem iPad ein — ohne Terminal.** Deshalb:
+- Jeder Schritt muss **nur im Browser** gehen (GitHub-, Cloudflare-, Netlify-, Supabase-Weboberfläche), mit genauen Klickpfaden.
+- Alles Technische (Datenbank anlegen, Migrationen, Secrets setzen, Deploy, API-Adresse ins Frontend) erledigt **GitHub Actions automatisch**; Daniel legt nur Secrets/Variablen an und tippt auf „Run workflow".
+- Fehlermeldungen der Workflows als verständliche deutsche `::error::`/`::notice::`-Annotationen.
+- Terminal-Commands nur als optionaler Anhang.
+Wenn sich am Setup etwas ändert, sofort mitändern.
 
 ## 8. Spielregeln für dich
 

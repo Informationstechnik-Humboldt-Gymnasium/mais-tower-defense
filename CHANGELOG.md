@@ -1,5 +1,16 @@
 # Änderungen
 
+## v0.2.1
+
+Einrichtung komplett vom iPad aus möglich.
+
+- Neue Einrichtungsanleitung (SETUP.md) nur mit Browser-Klicks, ohne Terminal.
+- GitHub Actions richtet Cloudflare jetzt selbst ein: Account-ID ermitteln, Datenbank anlegen oder wiederfinden, Migrationen, Worker-Deploy, Sitzungs-Geheimnis einmalig erzeugen, workers.dev-Adresse anlegen. Nötig ist nur noch das Secret `CLOUDFLARE_API_TOKEN` (plus `SUPABASE_ANON_KEY`).
+- Die API-Adresse wird automatisch ins Spiel eingebaut (keine Variable `API_URL` mehr nötig).
+- Optional: Netlify wird automatisch angelegt und bei jeder Version aktualisiert (Secret `NETLIFY_AUTH_TOKEN`); die Netlify-Adresse wird automatisch für die API freigegeben.
+- Verständliche deutsche Fehlermeldungen im Workflow.
+- Tests für das Einrichtungs- und das Netlify-Skript gegen nachgebaute Cloudflare- und Netlify-Schnittstellen.
+
 ## v0.2.0
 
 Anmeldung mit dem Bürgerportal-Konto und Monatsabo.

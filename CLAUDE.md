@@ -1,4 +1,4 @@
-# CLAUDE.md — Arbeitsanweisungen für Claude Code 🤖
+# CLAUDE.md — Arbeitsanweisungen für Claude Code
 
 > Wenn Daniel sagt **„Lies das Repo und fang an"**, dann übernimmst du ab sofort **komplett die Verwaltung dieses Repos**: Du implementierst alles selbst, deployst, gibst Releases raus. Daniel schreibt keinen Code — er lenkt nur noch inhaltlich.
 
@@ -6,9 +6,11 @@
 
 ## 1. Deine Rolle
 
-Du bist der **einzige Entwickler und Repo-Manager** von *Mais Tower Defense* 🌽🛡️.
+Du bist der **einzige Entwickler und Repo-Manager** von *Mais Tower Defense*.
 
-- Baue das Spiel gemäß der Mechanik-Checkliste in **README.md** (Vorbild: *Bloons TD 6* — die Checkliste ist verbindlicher Pflichtumfang, der Reihe nach umsetzen bis alles steht; eigenes Setting: Monster & Soldaten statt Bloons, Panzer statt MOABs, **nur der Modus „Normal"**, **keine Helden/Paragone/Insta-Türme/Powers**).
+- Baue das Spiel gemäß der Mechanik-Checkliste in **README.md** (Vorbilder: **Spielablauf wie *Bloons TD 6***, **Türme wie *Tower Defense X* (Roblox)** — die Checkliste ist verbindlicher Pflichtumfang, der Reihe nach umsetzen bis alles steht; eigenes Setting: Monster & Soldaten statt Bloons, Panzer statt MOABs, **nur der Modus „Normal"**, **keine Helden/Paragone/Insta-Türme/Powers**, **kein Loadout**, **keine Magie-Klasse**, **vorerst keine wöchentlichen Events**).
+- Türme: **2 Upgrade-Pfade à 5 Stufen, Crosspath „5-2"**, Platzierungslimits pro Turm. Nur **besondere Gegner** (schwere Panzer u. ä.) greifen Türme an (Betäubung/Turm-Schaden).
+- Eigene Umsetzung: Rollen und Mechaniken übernehmen, aber **keine Namen, Grafiken oder Inhalte** der Vorbilder kopieren.
 - Web-Game, **extrem optimiert** (Ziele & Techniken siehe README „Technik").
 - **Daniel sieht nur Ergebnisse**: fertige Builds, Releases, kurze Statusberichte in Deutsch.
 
@@ -27,9 +29,9 @@ Drei getrennte Welten — nichts vermischen:
 
 | System | Zweck | Regeln |
 |---|---|---|
-| 🟠 **Cloudflare D1** | Spielkonten (Username/Passwort) + alle Spieldaten (Spielstände, Fortschritt, Highscores, Meta-Progression) | Migrationen laufen **automatisch bei jedem Deploy** (`wrangler d1 migrations apply` im Deploy-Script) → einmal verbunden, aktualisiert sich die DB von selbst |
-| 🟢 **Maiskolbistan-Supabase** | **NUR die Wallet**: Maisdollar-Guthaben lesen + Abo-Abbuchung schreiben | Das ist das Bürgerportal-Backend eines Mitstreiters. **Schema NIEMALS ändern**, nur über die etablierte Zugriffsmethode konsumieren. Zugriffsweise/Credentials: im Org-Geschwister-Repo **`app-buergerportal`** bzw. dessen lokaler Kopie nachschauen und identisch übernehmen |
-| 📦 **Self-Hosted DB** | Alternative für eigene Infrastruktur (SQLite oder Postgres) | Gleiches Schema, gleiche Migrationen, umschaltbar über `DB_ADAPTER` — Funktionsweise in README dokumentiert, Commands pflegst du in SETUP.md |
+| **Cloudflare D1** | Spielkonten (Username/Passwort) + alle Spieldaten (Spielstände, Fortschritt, Highscores, Meta-Progression) | Migrationen laufen **automatisch bei jedem Deploy** (`wrangler d1 migrations apply` im Deploy-Script) → einmal verbunden, aktualisiert sich die DB von selbst |
+| **Maiskolbistan-Supabase** | **NUR die Wallet**: Maisdollar-Guthaben lesen + Abo-Abbuchung schreiben | Das ist das Bürgerportal-Backend eines Mitstreiters. **Schema NIEMALS ändern**, nur über die etablierte Zugriffsmethode konsumieren. Zugriffsweise/Credentials: im Org-Geschwister-Repo **`app-buergerportal`** bzw. dessen lokaler Kopie nachschauen und identisch übernehmen |
+| **Self-Hosted DB** | Alternative für eigene Infrastruktur (SQLite oder Postgres) | Gleiches Schema, gleiche Migrationen, umschaltbar über `DB_ADAPTER` — Funktionsweise in README dokumentiert, Commands pflegst du in SETUP.md |
 
 ## 4. Konten, Passwörter & Abo-Logik (Pflicht-Spezifikation)
 
@@ -37,7 +39,7 @@ Drei getrennte Welten — nichts vermischen:
 - Separates Konto mit **Username + Passwort** — unabhängig von Maiskolbistan.
 - Passwörter: **Argon2id**-Hash, einzigartiger 16-Byte-Salt pro User, Pepper aus Server-Secret, timing-sicherer Vergleich. Keine Klartext-Passwörter, keine schwachen Hashes. Den Pepper/Secrets niemals in Repo oder Client-Build.
 
-### Maiskolbistan = reines Zahlungsmittel 💰
+### Maiskolbistan = reines Zahlungsmittel
 - Dort wohnt die **Maisdollar**-Währung. Das Spiel nutzt sie **nur** für die Abo-Zahlung.
 - Es wird **dort kein zusätzliches Konto angelegt** — das Spielkonto existiert nur in D1.
 
@@ -80,14 +82,15 @@ Erstelle und **pflege immer aktuell** eine `SETUP.md`: eine **einfache, deutsche
 
 ## 8. Spielregeln für dich
 
-- ❌ **Keine Pull Requests.** Direkt pushen.
-- ✅ **Jede Änderung** → neues Release mit neuer ZIP.
-- ❌ Kein Code, keine Dokumentation ins Repo, die Secrets enthält.
-- ❌ Maiskolbistan-Schema **niemals** verändern oder erweitern.
-- ✅ Erst Build + Smoke-Test verifizieren, dann pushen — kein toter Stand auf dem Branch.
-- ✅ Deutsch als Sprache für UI, Docs, Commits (Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:` …).
-- ✅ Performance-Budget ernst nehmen: 60 FPS bei 1000+ Objekten, kleines Initial-Bundle.
-- 🧭 Wenn eine Anforderung unklar ist: notiere deine Annahme als GitHub-Issue und entscheide pragmatisch weiter — stoppe nicht.
+- **Keine Pull Requests.** Direkt pushen.
+- **Jede Änderung** → neues Release mit neuer ZIP.
+- Kein Code, keine Dokumentation ins Repo, die Secrets enthält.
+- Maiskolbistan-Schema **niemals** verändern oder erweitern.
+- Erst Build + Smoke-Test verifizieren, dann pushen — kein toter Stand auf dem Branch.
+- Deutsch als Sprache für UI, Docs, Commits (Conventional Commits: `feat:`, `fix:`, `docs:`, `chore:` …).
+- **Keine Emojis** — weder in UI, Docs, Commits noch Berichten.
+- Performance-Budget ernst nehmen: 60 FPS bei 1000+ Objekten, kleines Initial-Bundle.
+- Wenn eine Anforderung unklar ist: notiere deine Annahme als GitHub-Issue und entscheide pragmatisch weiter — stoppe nicht.
 
 ---
 
